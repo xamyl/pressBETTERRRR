@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rss</title>
+<link rel="alternate" type="application/rss+xml" title="RSS" href="thepress-feed.surge.sh/meow.xml">
+<style>
+  body {
+    background: #121212;
+    color: #eee;
+    font-family: system-ui, sans-serif;
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 { color: #ffcc00; }
+  #feed {
+    max-width: 700px;
+    width: 100%;
+    margin-top: 2rem;
+  }
+  article {
+    background: #1e1e1e;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+  }
+  a {
+    color: #ffcc00;
+    text-decoration: none;
+    font-size: 1.1rem;
+  }
+  a:hover { text-decoration: underline; }
+  p { color: #aaa; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+  <div id="feed"></div>
+
+<script>
+(async () => {
+  // Find RSS link from the <link rel="alternate"> tag
+  const rssLink = document.querySelector('link[type="application/rss+xml"]')?.href;
+  const feedContainer = document.getElementById('feed');
+
+  if (!rssLink) {
+    feedContainer.innerHTML = "<p>Hey dude the news isn't Newsing</p>";
+    return;
+  }
+
+  try {
+    const res = await fetch(rssLink);
+    const text = await res.text();
+    const xml = new DOMParser().parseFromString(text, "text/xml");
+    const items = xml.querySelectorAll("item, entry");
+
+    feedContainer.innerHTML = "";
+    items.forEach(item => {
+      const title = item.querySelector("title")?.textContent || "Untitled";
+      const link = item.querySelector("link")?.textContent || item.querySelector("link")?.getAttribute("href") || "#";
+      const desc = item.querySelector("description, summary")?.textContent || "";
+      const article = document.createElement("article");
+      article.innerHTML = `
+        <a href="${link}" target="_blank" rel="noopener">${title}</a>
+        <p>${desc}</p>
+      `;
+      feedContainer.appendChild(article);
+    });
+  } catch (err) {
+    feedContainer.innerHTML = `<p>Error loading feed: ${err.message}</p>`;
+  }
+})();
+</script>
+</body>
+</html>
