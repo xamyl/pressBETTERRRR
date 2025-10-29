@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>rss</title>
-<link rel="alternate" type="application/rss+xml" title="RSS" href="https://thepress-feed.surge.sh/meow.xml">
+<link rel="alternate" type="application/rss+xml" title="My RSS Feed" href="https://thepress-feed.surge.sh/meow.xml" />
+
 <style>
   body {
     background: #121212;
@@ -16,46 +17,59 @@
     flex-direction: column;
     align-items: center;
   }
-  h1 { color: #ffcc00; }
+  h1 {
+    color: #ffcc00;
+    margin-bottom: 1rem;
+  }
   #feed {
     max-width: 700px;
     width: 100%;
-    margin-top: 2rem;
   }
   article {
     background: #1e1e1e;
     padding: 1rem;
-    border-radius: 8px;
-    margin: 0.5rem 0;
+    border-radius: 10px;
+    margin: 0.75rem 0;
   }
   a {
     color: #ffcc00;
     text-decoration: none;
     font-size: 1.1rem;
   }
-  a:hover { text-decoration: underline; }
-  p { color: #aaa; font-size: 0.9rem; }
+  a:hover {
+    text-decoration: underline;
+  }
+  p {
+    color: #aaa;
+    font-size: 0.9rem;
+  }
 </style>
 </head>
 <body>
-  <div id="feed"></div>
+  <h1>RSS Feed</h1>
+  <div id="feed">Loading...</div>
 
 <script>
 (async () => {
-  // Find RSS link from the <link rel="alternate"> tag
   const rssLink = document.querySelector('link[type="application/rss+xml"]')?.href;
   const feedContainer = document.getElementById('feed');
 
   if (!rssLink) {
-    feedContainer.innerHTML = "<p>Hey dude the news isn't Newsing</p>";
+    feedContainer.innerHTML = "<p>No RSS feed found on this page.</p>";
     return;
   }
 
   try {
-    const res = await fetch(rssLink);
-    const text = await res.text();
-    const xml = new DOMParser().parseFromString(text, "text/xml");
+    // Fetch using AllOrigins to bypass CORS
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(rssLink)}`);
+    const data = await response.json();
+    const xml = new DOMParser().parseFromString(data.contents, "text/xml");
     const items = xml.querySelectorAll("item, entry");
+
+    if (!items.length) {
+      feedContainer.innerHTML = "<p>No items found in feed.</p>";
+      return;
+    }
 
     feedContainer.innerHTML = "";
     items.forEach(item => {
